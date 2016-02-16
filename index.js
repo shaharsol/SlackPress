@@ -229,13 +229,16 @@ app.post('/blogit', function(req, res) {
 							console.log('no error from wordpress %s',postID);
 							// http://162.243.237.137/wp-admin/post.php?post=12&action=edit
 							
-							var body = {
+							var postBody = {
 								text: 'Edit your draft at http://162.243.237.137/wp-admin/post.php?post=' + postID + '&action=edit'	
+							}
+							var headers = {
+								'Content-Type': 'application/json'	
 							}
 							
 							console.log('rersponse utl is : %s',req.body.response_url);
 							
-							request.post(req.body.response_url,{form: body},function(error,response,body){
+							request.post(req.body.response_url,{body: JSON.stringify(postBody), headers: headers},function(error,response,body){
 								if(error){
 									console.log('error in slack oath %s',error);
 								}else if(response.statusCode > 300){
