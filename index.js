@@ -5,6 +5,7 @@ var request = require('request');
 var util = require('util');
 var async = require('async');
 var _ = require('lodash');
+var wordpress = require( "wordpress" );
 
 var express = require('express');
 var bodyParser = require('body-parser');
@@ -210,7 +211,22 @@ app.post('/blogit', function(req, res) {
 
 						console.log(post);
 
-
+					var wp = wordpress.createClient({
+					    url: "162.243.237.137",
+					    username: "shaharsol",
+					    password: "12345678"
+					});	
+					
+					wp.newPost({
+						title: 'post from slack',
+						content: post
+					},function(err,what){
+						if(err){
+							console.log('error posting to wordpress: %s',err)
+						}else{
+							console.log('no error from wordpress %s',what);
+						}
+					});
 
 
 					res.sendStatus(200).end();
