@@ -173,7 +173,9 @@ app.get('/slack-authorized', function(req, res) {
 
 
 app.get('/', function(request, response) {
-  response.render('pages/index');
+  response.render('pages/index',{
+	  config: config
+  });
 });
 
 app.post('/blogit', function(req, res) {
