@@ -197,6 +197,15 @@ app.post('/blogit', function(req, res) {
 				}else{
 					console.log('channel history: %s',util.inspect(body,{depth: 8}))
 					
+					// TBD verify we got "ok: true"
+					var messages = JSON.parse(body).messages;
+					var post = '';
+					
+					
+					
+					
+					
+					
 					res.sendStatus(200).end;
 
 				}
