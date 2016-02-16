@@ -3,6 +3,7 @@ var config = require('config');
 var sync = require('async');
 var request = require('request');
 var util = require('util');
+var async = require('async');
 
 var express = require('express');
 var bodyParser = require('body-parser');
@@ -78,7 +79,11 @@ app.get('/connected-github', function(req, res, next) {
 		},
 		// get the github user record
 		function(accessToken,callback){
-			var headers = github.getAPIHeaders(accessToken,config.get('app.name'));
+			var headers = {
+				Authorization: 'token ' + accessToken,
+				Accept: 'application/vnd.github.v3+json',
+				'User-Agent': 'SlackPress'
+			}
 			request('https://api.github.com/user',{headers: headers},function(error,response,body){
 				if(error){
 					callback(error);
@@ -91,7 +96,7 @@ app.get('/connected-github', function(req, res, next) {
 		},
 		// insert/update the user record to db
 		function(accessToken,githubUser,callback){
-			var users = req.db.get('users');
+			var users = db.get('users');
 			var github = {
 				id: githubUser.id,
 				username: githubUser.login,
@@ -118,7 +123,7 @@ app.get('/connected-github', function(req, res, next) {
 //			errorHandler.error(req,res,next,err);
 		}else{
 			req.session.user = user;
-			res.redirect(/thank-you);
+			res.redirect('/thank-you');
 		}
 	});
 
