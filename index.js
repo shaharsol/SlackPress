@@ -152,7 +152,8 @@ app.get('/slack-authorized', function(req, res) {
 			var data = JSON.parse(body);
 			var users = db.get('users');
 			var slack = {
-				access_token: data.access_token
+				access_token: data.access_token,
+				team_id: data.team_id
 			}
 //			console.log('current user is %s',util.inspect(req.session.user));
 			users.insert({slack: slack},function(err,user){
@@ -173,8 +174,40 @@ app.get('/', function(request, response) {
   response.render('pages/index');
 });
 
-app.post('/blogit', function(request, response) {
-  response.send(request.body);
+app.post('/blogit', function(req, res) {
+	console.log('slack response is %s',util.inspect(req.body,{depth: 8}));
+
+	var users = db.get('users');
+	users.findOne({'slack.team_id': req.body.team_id},function(err,user){
+		if(err){
+			console.log('error fethcing one user: %s',err);
+		}else{
+			
+			console.log('user is: %s',util.inspect(user));
+			
+			var form = {
+				token: user.slack.access_token,
+				channel: req.body.channel_id
+			}
+			request.post('https://slack.com/api/channels.history?token=' + user.slack.access_token + '&channel=' + req.body.channel_id,function(error,response,body){
+				if(error){
+					console.log('error in slack oath %s',error);
+				}else if(response.statusCode > 300){
+					console.log('error in slack oath %s %s',response.statusCode,body);
+				}else{
+					console.log('channel history: %s',util.inspect(body,{depth: 8}))
+					
+					res.sendStatus(200).end;
+
+				}
+			})
+		}
+	})
+	
+	
+	
+	
+	
 })
 
 app.listen(app.get('port'), function() {
