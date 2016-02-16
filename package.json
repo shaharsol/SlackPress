@@ -7,15 +7,16 @@
     "start": "node index.js"
   },
   "dependencies": {
+    "async": "*",
     "body-parser": "^1.15.0",
+    "config": "*",
+    "connect-mongo": "0.8.2",
     "ejs": "2.3.3",
     "express": "4.13.3",
+    "express-session": "*",
+    "lodash": "^4.4.0",
     "mongodb": "^1.4.39",
     "monk": "*",
-    "config": "*",
-    "async": "*",
-    "express-session": "*",
-    "connect-mongo": "0.8.2",
     "request": "*"
   },
   "engines": {

@@ -4,6 +4,7 @@ var sync = require('async');
 var request = require('request');
 var util = require('util');
 var async = require('async');
+var _ = require('lodash');
 
 var express = require('express');
 var bodyParser = require('body-parser');
@@ -53,9 +54,9 @@ app.get('/connect-github', function(req, res, next) {
 });
 
 app.get('/connected-github', function(req, res, next) {
-	
+
 	async.waterfall([
-	    // switch the code for access token             
+	    // switch the code for access token
 		function(callback){
 			var form = {
 				client_id: config.get('github.client_id'),
@@ -104,12 +105,12 @@ app.get('/connected-github', function(req, res, next) {
 				access_token: accessToken,
 				avatar_url: githubUser.avatar_url
 			}
-			
+
 			users.findAndModify({
 				'_id': req.session.user._id.toString()
 			},{
 				$set: {
-					github: github, 
+					github: github,
 				}
 			},{
 				upsert: true,
@@ -133,7 +134,7 @@ app.get('/thank-you',function(req,res){
 	res.render('pages/thank-you',{
 		username: req.session.user.github.username
 	});
-})	
+})
 
 app.get('/slack-authorized', function(req, res) {
 	console.log('code is %s',req.query.code);
@@ -163,7 +164,7 @@ app.get('/slack-authorized', function(req, res) {
 					req.session.user = user;
 					res.redirect('/connect-github');
 				}
-				
+
 			});
 		}
 	})
@@ -182,9 +183,9 @@ app.post('/blogit', function(req, res) {
 		if(err){
 			console.log('error fethcing one user: %s',err);
 		}else{
-			
+
 			console.log('user is: %s',util.inspect(user));
-			
+
 			var form = {
 				token: user.slack.access_token,
 				channel: req.body.channel_id
@@ -196,27 +197,33 @@ app.post('/blogit', function(req, res) {
 					console.log('error in slack oath %s %s',response.statusCode,body);
 				}else{
 					console.log('channel history: %s',util.inspect(body,{depth: 8}))
-					
+
 					// TBD verify we got "ok: true"
 					var messages = JSON.parse(body).messages;
-					var post = '';
-					
-					
-					
-					
-					
-					
-					res.sendStatus(200).end;
+					var post = _.chain(messages)
+						.filter(function(message) {
+							return !message.subtype;
+						}).pluck('text')
+						.reverse()
+						.value()
+						.join('\n');
+
+						console.log(post);
+
+
+
+
+					res.sendStatus(200).end();
 
 				}
 			})
 		}
 	})
-	
-	
-	
-	
-	
+
+
+
+
+
 })
 
 app.listen(app.get('port'), function() {
