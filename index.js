@@ -203,7 +203,7 @@ app.post('/blogit', function(req, res) {
 					var post = _.chain(messages)
 						.filter(function(message) {
 							return !message.subtype;
-						}).pluck('text')
+						}).map('text')
 						.reverse()
 						.value()
 						.join('\n');
