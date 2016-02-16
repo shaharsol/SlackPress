@@ -178,7 +178,7 @@ app.get('/', function(request, response) {
 
 app.post('/blogit', function(req, res) {
 	console.log('slack response is %s',util.inspect(req.body,{depth: 8}));
-
+	res.sendStatus(200).end();
 	var users = db.get('users');
 	users.findOne({'slack.team_id': req.body.team_id},function(err,user){
 		if(err){
@@ -204,7 +204,9 @@ app.post('/blogit', function(req, res) {
 					var post = _.chain(messages)
 						.filter(function(message) {
 							return !message.subtype;
-						}).map('text')
+						}).map(function(message){
+							return '<p>' + message.text + '</p>';
+						})
 						.reverse()
 						.value()
 						.join('\n');
@@ -220,16 +222,35 @@ app.post('/blogit', function(req, res) {
 					wp.newPost({
 						title: 'post from slack',
 						content: post
-					},function(err,what){
+					},function(err,postID){
 						if(err){
 							console.log('error posting to wordpress: %s',err)
 						}else{
-							console.log('no error from wordpress %s',what);
+							console.log('no error from wordpress %s',postID);
+							// http://162.243.237.137/wp-admin/post.php?post=12&action=edit
+							
+							var body = {
+								text: 'Edit your draft at http://162.243.237.137/wp-admin/post.php?post=' + postID + '&action=edit'	
+							}
+							
+							console.log('rersponse utl is : %s',req.body.response_url);
+							
+							request.post(req.body.response_url,{form: body},function(error,response,body){
+								if(error){
+									console.log('error in slack oath %s',error);
+								}else if(response.statusCode > 300){
+									console.log('error in slack oath %s %s',response.statusCode,body);
+								}else{
+									console.log('slack delayed response response is %s',body);
+								}
+							})
+							
+							
 						}
 					});
 
 
-					res.sendStatus(200).end();
+					
 
 				}
 			})

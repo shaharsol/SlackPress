@@ -1,5 +1,8 @@
 {
 	"github": {
 		"client_secret": "GITHUB_CLIENT_SECRET"
+	},
+	"slack": {
+		"client_secret": "SLACK_CLIENT_SECRET"
 	}
 }

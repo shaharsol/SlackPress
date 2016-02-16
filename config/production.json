@@ -1,0 +1,12 @@
+{
+	"github": {
+		"client_id": "72570dd8d2b329200f6a",
+		"client_secret": "",
+		"redirect_domain": "slackpress.herokuapp.com"
+	},
+	"slack": {
+		"client_id": "21543821463.21585248336",
+		"client_secret": "",
+		"redirect_domain": "slackpress.herokuapp.com"
+	}
+}
