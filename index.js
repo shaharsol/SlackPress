@@ -133,7 +133,8 @@ app.get('/connected-github', function(req, res, next) {
 
 app.get('/thank-you',function(req,res){
 	res.render('pages/thank-you',{
-		username: req.session.user.github.username
+//		username: req.session.user.github.username
+		username: req.session.user.wordpress.username
 	});
 })
 
@@ -163,7 +164,8 @@ app.get('/slack-authorized', function(req, res) {
 					console.log('error inserting user %s',err);
 				}else{
 					req.session.user = user;
-					res.redirect('/connect-github');
+//					res.redirect('/connect-github');
+					res.redirect('/connect-wordpress');
 				}
 
 			});
@@ -176,6 +178,29 @@ app.get('/', function(request, response) {
   response.render('pages/index',{
 	  config: config
   });
+});
+
+app.get('/connect-wordpress', function(request, response) {
+  response.render('pages/connect-wordpress',{
+  });
+});
+
+app.post('/connect-wordpress', function(req, res) {
+	var users = db.get('users');
+	users.findAndModify({_id: req.session.user._id.toString()},{$set:{
+		wordpress: {
+			domain: req.body.domain,
+			username: req.body.username,
+			password: req.body.password
+		}
+	}},{new: true},function(err,user){
+		if(err){
+			console.log('err saving to wordpress');
+		}else{
+			req.session.user = user;
+			res.redirect('/thank-you');
+		}
+	})
 });
 
 app.post('/blogit', function(req, res) {
@@ -216,9 +241,12 @@ app.post('/blogit', function(req, res) {
 						console.log(post);
 
 					var wp = wordpress.createClient({
-					    url: "162.243.237.137",
-					    username: "shaharsol",
-					    password: "12345678"
+//					    url: "162.243.237.137",
+//					    username: "shaharsol",
+//					    password: "12345678"
+					    url: user.wordpress.domain,
+					    username: user.wordpress.username,
+					    password: user.wordpress.password
 					});	
 					
 					wp.newPost({
