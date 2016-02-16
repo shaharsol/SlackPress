@@ -2,15 +2,30 @@ var url = require('url');
 var config = require('config');
 var sync = require('async');
 var request = require('request');
+var util = require('util');
 
 var express = require('express');
 var bodyParser = require('body-parser');
 var app = express();
 
+
+
 var mongo = require('mongodb');
 var monk = require('monk');
 var mongoUri = process.env.MONGOLAB_URI || 'mongodb://localhost:27017/slackpress';
 var db = monk(mongoUri);
+
+var session = require('express-session')
+var MongoStore = require('connect-mongo')(session);
+app.use(session({
+	secret: 'MyBloody',
+	resave: false,
+	saveUninitialized: false,
+	store: new MongoStore({
+		url: mongoUri,
+		autoReconnect: true
+	})
+}));
 
 
 app.set('port', (process.env.PORT || 5000));
@@ -30,6 +45,7 @@ app.get('/connect-github', function(req, res, next) {
 		query: {
 			client_id: config.get('github.client_id'),
 			redirect_uri: 'http://' + config.get('github.redirect_domain') + '/connected-github',
+			scope: 'repo'
 		}
 	}
 	res.redirect(url.format(redirect));
@@ -85,12 +101,8 @@ app.get('/connected-github', function(req, res, next) {
 			}
 			
 			users.findAndModify({
-				'github.id': githubUser.id
+				'_id': req.session.user._id.toString()
 			},{
-				$setOnInsert:{
-					email: githubUser.email,
-					created_at: new Date()
-				},
 				$set: {
 					github: github, 
 				}
@@ -103,19 +115,54 @@ app.get('/connected-github', function(req, res, next) {
 		}
 	],function(err,user,avatar){
 		if(err){
-			errorHandler.error(req,res,next,err);
+//			errorHandler.error(req,res,next,err);
 		}else{
 			req.session.user = user;
-			var next = req.session.next;
-			delete req.session.next;
-			if(!next){
-				next = '/';
-			}
-			res.redirect(next);
+			res.redirect(/thank-you);
 		}
 	});
 
 });
+
+app.get('/thank-you',function(req,res){
+	res.render('pages/thank-you',{
+		username: req.session.user.github.username
+	});
+})	
+
+app.get('/slack-authorized', function(req, res) {
+	console.log('code is %s',req.query.code);
+	var form = {
+		client_id: config.get('slack.client_id'),
+		client_secret: config.get('slack.client_secret'),
+		code: req.query.code,
+	}
+	request.post('https://slack.com/api/oauth.access',{form: form},function(error,response,body){
+		if(error){
+			console.log('error in slack oath %s',error);
+		}else if(response.statusCode > 300){
+			console.log('error in slack oath %s %s',response.statusCode,body);
+		}else{
+			console.log('slack response is %s',body);
+			var data = JSON.parse(body);
+			var users = db.get('users');
+			var slack = {
+				access_token: data.access_token
+			}
+//			console.log('current user is %s',util.inspect(req.session.user));
+			users.insert({slack: slack},function(err,user){
+				if(err){
+					console.log('error inserting user %s',err);
+				}else{
+					req.session.user = user;
+					res.redirect('/connect-github');
+				}
+				
+			});
+		}
+	})
+});
+
 
 app.get('/', function(request, response) {
   response.render('pages/index');
