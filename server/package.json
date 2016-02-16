@@ -11,7 +11,7 @@
     "express": "4.13.3",
     "mongodb": "^1.4.39",
     "monk": "*",
-    
+    "config": "*"
   },
   "engines": {
     "node": "0.12.7"

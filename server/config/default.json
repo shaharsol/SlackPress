@@ -1,0 +1,7 @@
+{
+	"github": {
+		"client_id": "ca9eaf1d62a764e0d0fd",
+		"client_secret": "",
+		"redirect_domain": "localhost:5000"
+	}
+}
